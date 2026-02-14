@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,session,redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///placement.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+app.config["SECRET_KEY"] = "mysecret123"
 db = SQLAlchemy(app)
 
 # =====================
@@ -176,12 +176,73 @@ def login():
             return "admin dashboard"
 
         elif user.role == "company":
-            return "company dashboard"
+            return redirect('company_dashboard')
 
         else:
             return "student dashboard"
 
     return render_template("login.html")
+
+
+
+@app.route("/company_dashboard")
+def company_dashboard():
+    # check login
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    # get company profile
+    company = CompanyProfile.query.filter_by(user_id=user_id).first()
+
+    # get jobs posted by company
+    
+
+    return render_template(
+        "company_dashboard.html",
+        company=company,
+        
+    )
+ 
+@app.route("/complete-company-profile", methods=["GET", "POST"])
+def complete_company_profile():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return redirect("/login")
+
+    company = CompanyProfile.query.filter_by(user_id=user_id).first()
+
+    if request.method == "POST":
+
+        # ✅ CASE 1: Profile exists → UPDATE
+        if company:
+            company.company_name = request.form["company_name"]
+            company.industry = request.form["industry"]
+            company.website = request.form["website"]
+            company.location = request.form["location"]
+            company.company_size = request.form["company_size"]
+            company.description = request.form["description"]
+
+        # ✅ CASE 2: First time → INSERT
+        else:
+            company = CompanyProfile(
+                user_id=user_id,
+                company_name=request.form["company_name"],
+                industry=request.form["industry"],
+                website=request.form["website"],
+                location=request.form["location"],
+                company_size=request.form["company_size"],
+                description=request.form["description"]
+            )
+            db.session.add(company)
+
+        db.session.commit()
+        return redirect("/company_dashboard")
+
+    return render_template("complete_company_profile.html", company=company)
 
 # =====================
 # RUN
