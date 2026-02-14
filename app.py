@@ -204,7 +204,7 @@ def company_dashboard():
         company=company,
         
     )
- 
+ #
 @app.route("/complete-company-profile", methods=["GET", "POST"])
 def complete_company_profile():
 
