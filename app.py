@@ -141,10 +141,8 @@ def register():
 
 
 
-        if role == "student":
-            return "student dashboard"
-        else:
-            return "company dashbaord"
+       
+       
 
     return render_template("register.html")
 
@@ -182,6 +180,7 @@ def login():
             return "student dashboard"
 
     return render_template("login.html")
+
 
 
 
@@ -236,7 +235,7 @@ def complete_company_profile():
                 location=request.form["location"],
                 company_size=request.form["company_size"],
                 description=request.form["description"]
-            )
+            )   
             db.session.add(company)
 
         db.session.commit()
